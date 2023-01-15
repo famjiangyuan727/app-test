@@ -14,12 +14,12 @@ import {
 } from '../../component';
 import { navigate } from '../../navigation';
 import NavigationConstant from '../../navigation/constant';
-import { Colors } from '../../style';
+import AppStyles, { Colors } from '../../style';
 import styles from './style';
 import asset from '../../asset';
 import { isNullorEmpty } from '../../common/util';
 
-const { images } = asset
+const { images, icons } = asset
 const { Stacks } = NavigationConstant
 
 class Contact extends React.Component {
@@ -32,6 +32,17 @@ class Contact extends React.Component {
     }
 
     componentDidMount() {
+        // override headerLeft and headerRight function
+        this.props.navigation.setOptions({
+            headerRight: (props) => {
+                return (
+                    <TouchableOpacity onPress={this.onAddContactPress}>
+                        <Image source={icons.add} style={AppStyles.headerIcon} />
+                    </TouchableOpacity>
+                )
+            },
+        })
+
         this.getContactList()
 
         this.unsubscribe = this.props.navigation.addListener('focus', () => this.getContactList())
@@ -83,8 +94,12 @@ class Contact extends React.Component {
         )
     }
 
+    onAddContactPress = () => {
+        navigate(Stacks.ContactInfoView, {action: 'add'})
+    }
+
     onContactPress = (item, index) => {
-        navigate(Stacks.ContactInfoView, {...item, index})
+        navigate(Stacks.ContactInfoView, {...item, index, action: 'edit'})
     }
 
     renderItemSeparator = () => {

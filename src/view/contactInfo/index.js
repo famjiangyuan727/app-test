@@ -14,7 +14,7 @@ import {
 import { goBack } from '../../navigation';
 import styles from './style';
 import asset from '../../asset';
-import { isNullorEmpty } from '../../common/util';
+import { generateRandomString, isNullorEmpty, validateEmail } from '../../common/util';
 import { getData, setData } from '../../common/asyncStorage';
 
 class ContactInfo extends React.Component {
@@ -23,6 +23,7 @@ class ContactInfo extends React.Component {
         super(props)
         this.state = {
             index: null,
+            action: null,
             firstName: '',
             lastName: '',
             email: '',
@@ -47,6 +48,7 @@ class ContactInfo extends React.Component {
         console.log(params)
         this.setState({
             index: params.index,
+            action: params.action,
             firstName: params.firstName,
             lastName: params.lastName,
             email: params.email,
@@ -59,15 +61,26 @@ class ContactInfo extends React.Component {
     }
 
     onSave = (props) => {
-        const { firstName, lastName } = this.state
+        const { firstName, lastName, email, phone, action } = this.state
         if (isNullorEmpty(firstName) || isNullorEmpty(lastName)) {
             Alert.alert('Note', 'First Name or Last Name cannot be empty.')
             return
         }
 
-        // update async storage list
-        // back and refresh contact list
-        this.updateContactList(props)
+        if (!isNullorEmpty(email) && !validateEmail(email)) {
+            Alert.alert('Note', 'Invalid email format.')
+            return
+        }
+
+        if (action === 'edit') {
+            // update async storage list
+            // back and refresh contact list
+            this.updateContactList(props)
+        } else if (action === 'add') {
+            // add to async storage list
+            // back and refresh contact list
+            this.addContactList(props)
+        }
     }
 
     updateContactList = async (props) => {
@@ -82,6 +95,25 @@ class ContactInfo extends React.Component {
                 email: email,
                 phone: phone
             }
+            await setData(data)
+            if (props.canGoBack) goBack()
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    addContactList = async (props) => {
+        try {
+            const { firstName, lastName, email, phone } = this.state
+
+            const data = await getData()
+            data.push({
+                id: generateRandomString(24),
+                firstName: firstName,
+                lastName: lastName,
+                email: email,
+                phone: phone
+            })
             await setData(data)
             if (props.canGoBack) goBack()
         } catch (error) {
